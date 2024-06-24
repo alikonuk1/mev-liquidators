@@ -83,34 +83,9 @@ contract testTest is Test, DeployScript {
         uint256 hFA = IInitCore(INIT_CORE).getPosHealthCurrent_e18(posId);
         console2.log("Health Factor After =", hFA);
 
-        // Prepare target data
-        address[] memory target = new address[](1);
-        target[0] = undelying;
-
-        // Prepare call data
-        bytes[] memory call = new bytes[](1);
-        call[0] = abi.encodeWithSelector(
-            IERC20.approve.selector,
-            INIT_CORE,
-            type(uint256).max
-        );
-
-        // Prepare value data
-        uint256[] memory value = new uint256[](1);
-        value[0] = 0;
-
-        // Approve data
-        bytes memory approveData = abi.encode(target, call, value);
-
         vm.startPrank(deployer);
         //IERC20(WMNT).approve(INIT_CORE, type(uint256).max);
-        initLiquidator.updateAndLiquidate(
-            approveData,
-            posId,
-            inWMNT,
-            inWETH,
-            0
-        );
+        initLiquidator.liquidate(posId, inWMNT, inWETH, 0);
         vm.stopPrank();
 
         uint256 hFf = IInitCore(INIT_CORE).getPosHealthCurrent_e18(posId);
