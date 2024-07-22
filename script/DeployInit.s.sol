@@ -7,9 +7,9 @@ import {InitLiquidator} from "src/Init/InitLiquidator.sol";
 contract DeployScript is Script {
     InitLiquidator initLiquidator;
 
-    function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+    uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
+    function run() public {
         vm.startBroadcast(deployerPrivateKey);
         initLiquidator = new InitLiquidator();
         vm.stopBroadcast();

@@ -4,6 +4,7 @@ out = 'out'
 libs = ['lib']
 
 [rpc_endpoints]
+arbitrum = "https://arb1.arbitrum.io/rpc"
 mainnet = "https://eth.llamarpc.com"
 mantle = "https://rpc.mantle.xyz"
 

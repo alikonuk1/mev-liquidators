@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2} from "lib/forge-std/src/Test.sol";
-import {DeployScript} from "script/Deploy.s.sol";
+import {DeployScript} from "script/DeployInit.s.sol";
 import {IERC20} from "lib/forge-std/src/interfaces/IERC20.sol";
 import {IInitCore} from "src/Init/interfaces/IInitCore.sol";
 import {ILendingPool} from "src/Init/interfaces/ILendingPool.sol";
@@ -21,7 +21,7 @@ contract testTest is Test, DeployScript {
     address public inWMNT = 0x44949636f778fAD2b139E665aee11a2dc84A2976;
     address public router = 0xeaEE7EE68874218c3558b40063c42B82D3E7232a;
 
-    address public deployer = 0x2B68407d77B044237aE7f99369AA0347Ca44B129;
+    address public deployer = vm.addr(deployerPrivateKey);
     address public alice;
     address public bob;
     address public carol;
@@ -30,8 +30,7 @@ contract testTest is Test, DeployScript {
     uint256 public mantleFork;
 
     address public BVM_ETH = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111;
-    address public underlying_inWMNT =
-        0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8;
+    address public underlying_inWMNT = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8;
 
     function setUp() public {
         mantleFork = vm.createSelectFork(vm.rpcUrl("mantle"));
@@ -55,13 +54,13 @@ contract testTest is Test, DeployScript {
     }
 
     function test_simulateLiquidate() public {
-        uint256 posId = 67023274737983072427381287414060723887646681971416343951624988593736628812676;
+        uint256 posId =
+            67023274737983072427381287414060723887646681971416343951624988593736628812676;
 
         uint256 hFB = IInitCore(INIT_CORE).getPosHealthCurrent_e18(posId);
         console2.log("Health Factor Before =", hFB);
 
-        (address[] memory collPools, , , , ) = IPosManager(POS_MANAGER)
-            .getPosCollInfo(posId);
+        (address[] memory collPools,,,,) = IPosManager(POS_MANAGER).getPosCollInfo(posId);
 
         address undelying = ILendingPool(collPools[0]).underlyingToken();
 
@@ -71,8 +70,7 @@ contract testTest is Test, DeployScript {
         vm.mockCall(
             INIT_ORACLE,
             abi.encodeWithSelector(
-                IInitOracle(INIT_ORACLE).getPrice_e36.selector,
-                undelying
+                IInitOracle(INIT_ORACLE).getPrice_e36.selector, undelying
             ),
             abi.encode(100000000)
         );
