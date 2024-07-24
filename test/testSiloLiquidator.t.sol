@@ -86,12 +86,20 @@ contract testTest is Test, DeployScript {
         console2.log("Is Solvent After =", isSolventA);
         assertEq(isSolventA, false);
 
+        // Check liquidator balance before liquidation
+        uint256 balanceB = IERC20(WETH).balanceOf(address(siloLiquidator));
+        console2.log("Balance Before Liquidation =", balanceB);
+
         // Liquidate
         vm.startPrank(deployer);
         address[] memory users = new address[](1);
         users[0] = alice;
         siloLiquidator.executeLiquidation(users, silo);
         vm.stopPrank();
+
+        // Check liquidator balance after liquidation
+        uint256 balanceA = IERC20(WETH).balanceOf(address(siloLiquidator));
+        console2.log("Balance After Liquidation =", balanceA);
 
         // Check if Alice is solvent after liquidation
         bool isSolventAL = silo.isSolvent(alice);
