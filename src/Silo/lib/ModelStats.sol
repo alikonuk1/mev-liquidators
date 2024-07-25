@@ -8,11 +8,11 @@ library ModelStats {
     /// @param _totalDeposits current total deposits for assets
     /// @param _totalBorrowAmount current total borrows for assets
     /// @return utilization value
-    function calculateUtilization(int256 _dp, uint256 _totalDeposits, uint256 _totalBorrowAmount)
-        internal
-        pure
-        returns (uint256)
-    {
+    function calculateUtilization(
+        int256 _dp,
+        uint256 _totalDeposits,
+        uint256 _totalBorrowAmount
+    ) internal pure returns (uint256) {
         if (_totalDeposits == 0 || _totalBorrowAmount == 0) return 0;
 
         return _totalBorrowAmount * uint256(_dp) / _totalDeposits;

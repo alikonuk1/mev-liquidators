@@ -36,9 +36,7 @@ interface ITokensFactory {
         string memory _name,
         string memory _symbol,
         address _asset
-    )
-        external
-        returns (IShareToken);
+    ) external returns (IShareToken);
 
     /// @dev just a helper method to see if address is a factory
     /// @return always true

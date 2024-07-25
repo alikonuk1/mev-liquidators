@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import "./SiloLens.sol";
+import "./interfaces/IFlashLiquidationReceiver.sol";
+import "./interfaces/ISilo.sol";
 import "./interfaces/IPriceProvider.sol";
 import "./interfaces/ISwapper.sol";
 import "./interfaces/ISiloRepository.sol";
@@ -25,22 +26,16 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         bytes4(keccak256("swapAmountOut(address,address,uint256,address)"));
 
     ISiloRepository public immutable siloRepository;
-    SiloLens public immutable lens;
     IERC20 public immutable quoteToken;
 
-    mapping(address => uint256) public earnings;
     mapping(IPriceProvider => ISwapper) public swappers;
 
     IPriceProvider[] public priceProvidersWithSwapOption;
 
-    event LiquidationBalance(
-        address user,
-        uint256 quoteAmountFromCollaterals
-    );
+    event LiquidationBalance(address user, uint256 quoteAmountFromCollaterals);
 
     constructor(
         address _repository,
-        address _lens,
         IPriceProvider[] memory _priceProvidersWithSwapOption,
         ISwapper[] memory _swappers
     ) Ownable(msg.sender) {
@@ -55,7 +50,6 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         );
 
         siloRepository = ISiloRepository(_repository);
-        lens = SiloLens(_lens);
 
         for (uint256 i = 0; i < _swappers.length; i++) {
             swappers[_priceProvidersWithSwapOption[i]] = _swappers[i];
@@ -68,25 +62,26 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         quoteToken = IERC20(priceProviderRepo.quoteToken());
     }
 
-    function withdraw() external {
-        uint256 amount = earnings[msg.sender];
+    receive() external payable {}
+
+    function withdraw() external onlyOwner {
+        uint256 amount = quoteToken.balanceOf(address(this));
         if (amount == 0) return;
 
-        earnings[msg.sender] = 0;
         quoteToken.transfer(msg.sender, amount);
     }
 
-    function withdrawEth() external {
-        uint256 amount = earnings[msg.sender];
+    function withdrawEth() external onlyOwner {
+        uint256 amount = quoteToken.balanceOf(address(this));
         if (amount == 0) return;
 
-        earnings[msg.sender] = 0;
         IWrappedNativeToken(address(quoteToken)).withdraw(amount);
-        payable(msg.sender).transfer(amount);
+        (bool sent,) = (msg.sender).call{value: amount}("");
+        require(sent, "Failed to send Ether");
     }
 
     function executeLiquidation(address[] calldata _users, ISilo _silo) external {
-        uint256 gasStart = 29_001_691; // eg: gasleft();
+        uint256 gasStart = 29_001_691;
         _silo.flashLiquidate(_users, abi.encode(gasStart));
     }
 
@@ -101,7 +96,6 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         uint256[] calldata _shareAmountsToRepaid,
         bytes memory _flashReceiverData
     ) external override {
-
         ISilo silo = ISilo(msg.sender);
         require(siloRepository.isSilo(address(silo)), "not a Silo");
 
@@ -138,9 +132,7 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
             );
         }
 
-        emit LiquidationBalance(
-            _user, quoteAmountFromCollaterals
-        );
+        emit LiquidationBalance(_user, quoteAmountFromCollaterals);
     }
 
     function priceProvidersWithSwapOptionCount() external view returns (uint256) {
@@ -171,7 +163,7 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         bool[] memory hasDebt = new bool[](_users.length);
 
         for (uint256 i; i < _users.length; i++) {
-            hasDebt[i] = lens.inDebt(_silos[i], _users[i]);
+            hasDebt[i] = inDebt(_silos[i], _users[i]);
         }
 
         return hasDebt;
@@ -186,6 +178,22 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         }
 
         revert("provider not found");
+    }
+
+    /// @notice Check if user is in debt
+    /// @param _silo Silo address from which to read data
+    /// @param _user wallet address for which to read data
+    /// @return TRUE if user borrowed any amount of any asset, otherwise FALSE
+    function inDebt(ISilo _silo, address _user) public view returns (bool) {
+        address[] memory allAssets = _silo.getAssets();
+
+        for (uint256 i; i < allAssets.length; i++) {
+            if (_silo.assetStorage(allAssets[i]).debtToken.balanceOf(_user) != 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function _swapForQuote(address _asset, uint256 _amount) internal returns (uint256) {

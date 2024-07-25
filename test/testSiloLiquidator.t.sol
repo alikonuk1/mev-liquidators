@@ -48,6 +48,8 @@ contract testTest is Test, DeployScript {
     }
 
     function test_simulateLiquidate() public {
+        address quoteToken = priceProviderRepository.quoteToken();
+
         // Alice deposits
         vm.startPrank(alice);
         ISilo silo = ISilo(siloRepository.getSilo(rETH));
@@ -87,7 +89,7 @@ contract testTest is Test, DeployScript {
         assertEq(isSolventA, false);
 
         // Check liquidator balance before liquidation
-        uint256 balanceB = IERC20(WETH).balanceOf(address(siloLiquidator));
+        uint256 balanceB = IERC20(quoteToken).balanceOf(address(siloLiquidator));
         console2.log("Balance Before Liquidation =", balanceB);
 
         // Liquidate
@@ -98,12 +100,171 @@ contract testTest is Test, DeployScript {
         vm.stopPrank();
 
         // Check liquidator balance after liquidation
-        uint256 balanceA = IERC20(WETH).balanceOf(address(siloLiquidator));
+        uint256 balanceA = IERC20(quoteToken).balanceOf(address(siloLiquidator));
         console2.log("Balance After Liquidation =", balanceA);
 
         // Check if Alice is solvent after liquidation
         bool isSolventAL = silo.isSolvent(alice);
         console2.log("Is Solvent After Liquidation =", isSolventAL);
         assertEq(isSolventAL, true);
+    }
+
+    function test_withdrawEarnings() public {
+        address quoteToken = priceProviderRepository.quoteToken();
+
+        // Alice deposits
+        vm.startPrank(alice);
+        ISilo silo = ISilo(siloRepository.getSilo(rETH));
+        IERC20(rETH).approve(address(silo), 1 ether);
+        silo.deposit(rETH, 1 ether, false);
+        vm.stopPrank();
+
+        // Alice borrows
+        vm.startPrank(alice);
+        silo.borrow(USDCe, 100000000); // Borrow 100 USDCe
+        vm.stopPrank();
+
+        // Check if Alice is solvent before price drop
+        bool isSolventB = silo.isSolvent(alice);
+        console2.log("Is Solvent Before =", isSolventB);
+        assertEq(isSolventB, true);
+
+        // Get collateral price before price drop
+        uint256 priceB = priceProviderRepository.getPrice(rETH);
+        console2.log("Collateral Price Before =", priceB);
+
+        // Simulate price drop on collateral
+        vm.mockCall(
+            PRICE_PROVIDERS_REPOSITORY,
+            abi.encodeWithSelector(priceProviderRepository.getPrice.selector, rETH),
+            abi.encode(11674738096228163)
+        );
+
+        // Get collateral price after price drop
+        uint256 priceA = priceProviderRepository.getPrice(rETH);
+        console2.log("Collateral Price After =", priceA);
+        assertEq(priceA, 11674738096228163);
+
+        // Check if Alice is solvent after price drop
+        bool isSolventA = silo.isSolvent(alice);
+        console2.log("Is Solvent After =", isSolventA);
+        assertEq(isSolventA, false);
+
+        // Check liquidator balance before liquidation
+        uint256 balanceB = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Liquidator Balance Before Liquidation =", balanceB);
+
+        // Liquidate
+        vm.startPrank(deployer);
+        address[] memory users = new address[](1);
+        users[0] = alice;
+        siloLiquidator.executeLiquidation(users, silo);
+        vm.stopPrank();
+
+        // Check liquidator balance after liquidation
+        uint256 balanceA = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Liquidator Balance After Liquidation =", balanceA);
+
+        // Check if Alice is solvent after liquidation
+        bool isSolventAL = silo.isSolvent(alice);
+        console2.log("Is Solvent After Liquidation =", isSolventAL);
+        assertEq(isSolventAL, true);
+
+        // Check liquidator deployers balance before withdraw
+        uint256 balanceDB = IERC20(quoteToken).balanceOf(deployer);
+        console2.log("Deployer Balance Before Withdraw =", balanceDB);
+
+        // Liquidator deployer withdraws earnings
+        vm.startPrank(deployer);
+        siloLiquidator.withdraw();
+        vm.stopPrank();
+
+        // Check liquidator deployers balance after withdraw
+        uint256 balanceDA = IERC20(quoteToken).balanceOf(deployer);
+        console2.log("Deployer Balance After Withdraw =", balanceDA);
+        assertEq(balanceDA, balanceA);
+    }
+
+    function test_withdrawEarningsInETH() public {
+        address quoteToken = priceProviderRepository.quoteToken();
+
+        // Alice deposits
+        vm.startPrank(alice);
+        ISilo silo = ISilo(siloRepository.getSilo(rETH));
+        IERC20(rETH).approve(address(silo), 1 ether);
+        silo.deposit(rETH, 1 ether, false);
+        vm.stopPrank();
+
+        // Alice borrows
+        vm.startPrank(alice);
+        silo.borrow(USDCe, 100000000); // Borrow 100 USDCe
+        vm.stopPrank();
+
+        // Check if Alice is solvent before price drop
+        bool isSolventB = silo.isSolvent(alice);
+        console2.log("Is Solvent Before =", isSolventB);
+        assertEq(isSolventB, true);
+
+        // Get collateral price before price drop
+        uint256 priceB = priceProviderRepository.getPrice(rETH);
+        console2.log("Collateral Price Before =", priceB);
+
+        // Simulate price drop on collateral
+        vm.mockCall(
+            PRICE_PROVIDERS_REPOSITORY,
+            abi.encodeWithSelector(priceProviderRepository.getPrice.selector, rETH),
+            abi.encode(11674738096228163)
+        );
+
+        // Get collateral price after price drop
+        uint256 priceA = priceProviderRepository.getPrice(rETH);
+        console2.log("Collateral Price After =", priceA);
+        assertEq(priceA, 11674738096228163);
+
+        // Check if Alice is solvent after price drop
+        bool isSolventA = silo.isSolvent(alice);
+        console2.log("Is Solvent After =", isSolventA);
+        assertEq(isSolventA, false);
+
+        // Check liquidator balance before liquidation
+        uint256 balanceB = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Liquidator Balance Before Liquidation =", balanceB);
+
+        // Liquidate
+        vm.startPrank(deployer);
+        address[] memory users = new address[](1);
+        users[0] = alice;
+        siloLiquidator.executeLiquidation(users, silo);
+        vm.stopPrank();
+
+        // Check liquidator balance after liquidation
+        uint256 balanceA = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Liquidator Balance After Liquidation =", balanceA);
+
+        // Check if Alice is solvent after liquidation
+        bool isSolventAL = silo.isSolvent(alice);
+        console2.log("Is Solvent After Liquidation =", isSolventAL);
+        assertEq(isSolventAL, true);
+
+        // Check liquidator deployers balance before withdraw
+        uint256 balanceDB = IERC20(quoteToken).balanceOf(deployer);
+        console2.log("Deployer Balance Before Withdraw =", balanceDB);
+
+        // Check liquidator deployers ETH balance before withdraw,
+        uint256 balanceDBE = address(deployer).balance;
+        console2.log("Deployer ETH Balance Before Withdraw =", balanceDBE);
+
+        // Liquidator deployer withdraws earnings
+        vm.startPrank(deployer);
+        siloLiquidator.withdrawEth();
+        vm.stopPrank();
+
+        // Check liquidator deployers balance after withdraw
+        uint256 balanceDA = IERC20(quoteToken).balanceOf(deployer);
+        console2.log("Deployer Balance After Withdraw =", balanceDA);
+
+        // Check liquidator deployers ETH balance after withdraw,
+        uint256 balanceDAE = address(deployer).balance;
+        console2.log("Deployer ETH Balance After Withdraw =", balanceDAE);
     }
 }

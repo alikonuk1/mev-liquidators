@@ -14,9 +14,9 @@ import "./lib/ModelStats.sol";
 contract SiloLens {
     using EasyMath for uint256;
 
-    ISiloRepository immutable public siloRepository;
+    ISiloRepository public immutable siloRepository;
 
-    constructor (ISiloRepository _siloRepo) {
+    constructor(ISiloRepository _siloRepo) {
         require(Ping.pong(_siloRepo.siloRepositoryPing), "invalid _repository");
 
         siloRepository = _siloRepo;
@@ -27,7 +27,8 @@ contract SiloLens {
     /// @param _asset asset address for which to read data
     /// @return Silo liquidity
     function liquidity(ISilo _silo, address _asset) external view returns (uint256) {
-        return ERC20(_asset).balanceOf(address(_silo)) - _silo.assetStorage(_asset).collateralOnlyDeposits;
+        return ERC20(_asset).balanceOf(address(_silo))
+            - _silo.assetStorage(_asset).collateralOnlyDeposits;
     }
 
     /// @notice Get amount of asset token that has been deposited to Silo
@@ -44,7 +45,11 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _asset asset address for which to read data
     /// @return amount of all "collateralOnly" deposits made for given asset
-    function collateralOnlyDeposits(ISilo _silo, address _asset) external view returns (uint256) {
+    function collateralOnlyDeposits(ISilo _silo, address _asset)
+        external
+        view
+        returns (uint256)
+    {
         return _silo.assetStorage(_asset).collateralOnlyDeposits;
     }
 
@@ -53,7 +58,11 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _asset asset address for which to read data
     /// @return amount of asset that has been borrowed
-    function totalBorrowAmount(ISilo _silo, address _asset) external view returns (uint256) {
+    function totalBorrowAmount(ISilo _silo, address _asset)
+        external
+        view
+        returns (uint256)
+    {
         return _silo.assetStorage(_asset).totalBorrowAmount;
     }
 
@@ -73,17 +82,16 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _user wallet address for which LTV is calculated
     /// @return userLTV user current LTV with 18 decimals
-    function getUserLTV(ISilo _silo, address _user) external view returns (uint256 userLTV) {
-        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) = _silo.getAssetsWithState();
+    function getUserLTV(ISilo _silo, address _user)
+        external
+        view
+        returns (uint256 userLTV)
+    {
+        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) =
+            _silo.getAssetsWithState();
 
-        (userLTV, ) = Solvency.calculateLTVs(
-            Solvency.SolvencyParams(
-                siloRepository,
-                _silo,
-                assets,
-                assetsStates,
-                _user
-            ),
+        (userLTV,) = Solvency.calculateLTVs(
+            Solvency.SolvencyParams(siloRepository, _silo, assets, assetsStates, _user),
             Solvency.TypeofLTV.MaximumLTV
         );
     }
@@ -93,7 +101,11 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _asset asset address for which to read data
     /// @return totalSupply of debt token
-    function totalBorrowShare(ISilo _silo, address _asset) external view returns (uint256) {
+    function totalBorrowShare(ISilo _silo, address _asset)
+        external
+        view
+        returns (uint256)
+    {
         return _silo.assetStorage(_asset).debtToken.totalSupply();
     }
 
@@ -104,11 +116,12 @@ contract SiloLens {
     /// @param _user account for which calculation are done
     /// @param _timestamp timestamp used for interest calculations
     /// @return total amount of asset user needs to repay at provided timestamp
-    function getBorrowAmount(ISilo _silo, address _asset, address _user, uint256 _timestamp)
-        external
-        view
-        returns (uint256)
-    {
+    function getBorrowAmount(
+        ISilo _silo,
+        address _asset,
+        address _user,
+        uint256 _timestamp
+    ) external view returns (uint256) {
         return Solvency.getUserBorrowAmount(
             _silo.assetStorage(_asset),
             _user,
@@ -123,7 +136,11 @@ contract SiloLens {
     /// @param _asset asset address for which to read data
     /// @param _user wallet address for which to read data
     /// @return balance of debt token of given user
-    function borrowShare(ISilo _silo, address _asset, address _user) external view returns (uint256) {
+    function borrowShare(ISilo _silo, address _asset, address _user)
+        external
+        view
+        returns (uint256)
+    {
         return _silo.assetStorage(_asset).debtToken.balanceOf(_user);
     }
 
@@ -134,11 +151,17 @@ contract SiloLens {
     /// @param _asset asset address for which to read data
     /// @param _user wallet address for which to read data
     /// @return balance of debt token of given user
-    function collateralBalanceOfUnderlying(ISilo _silo, address _asset, address _user) external view returns (uint256) {
+    function collateralBalanceOfUnderlying(ISilo _silo, address _asset, address _user)
+        external
+        view
+        returns (uint256)
+    {
         ISilo.AssetStorage memory _state = _silo.assetStorage(_asset);
 
-        return balanceOfUnderlying(_state.totalDeposits, _state.collateralToken, _user) +
-            balanceOfUnderlying(_state.collateralOnlyDeposits, _state.collateralOnlyToken, _user);
+        return balanceOfUnderlying(_state.totalDeposits, _state.collateralToken, _user)
+            + balanceOfUnderlying(
+                _state.collateralOnlyDeposits, _state.collateralOnlyToken, _user
+            );
     }
 
     /// @notice Get amount of debt of underlying token for given user
@@ -147,7 +170,11 @@ contract SiloLens {
     /// @param _asset asset address for which to read data
     /// @param _user wallet address for which to read data
     /// @return balance of underlying token owed
-    function debtBalanceOfUnderlying(ISilo _silo, address _asset, address _user) external view returns (uint256) {
+    function debtBalanceOfUnderlying(ISilo _silo, address _asset, address _user)
+        external
+        view
+        returns (uint256)
+    {
         ISilo.AssetStorage memory _state = _silo.assetStorage(_asset);
 
         return balanceOfUnderlying(_state.totalBorrowAmount, _state.debtToken, _user);
@@ -164,13 +191,15 @@ contract SiloLens {
         view
         returns (uint256)
     {
-        IPriceProvidersRepository priceProviderRepo = siloRepository.priceProvidersRepository();
+        IPriceProvidersRepository priceProviderRepo =
+            siloRepository.priceProvidersRepository();
         ISilo.AssetStorage memory assetStorage = _silo.assetStorage(_asset);
 
         uint256 assetPrice = priceProviderRepo.getPrice(_asset);
         uint8 assetDecimals = ERC20(_asset).decimals();
         uint256 userCollateralTokenBalance = assetStorage.collateralToken.balanceOf(_user);
-        uint256 userCollateralOnlyTokenBalance = assetStorage.collateralOnlyToken.balanceOf(_user);
+        uint256 userCollateralOnlyTokenBalance =
+            assetStorage.collateralOnlyToken.balanceOf(_user);
 
         uint256 assetAmount = Solvency.getUserCollateralAmount(
             assetStorage,
@@ -189,17 +218,21 @@ contract SiloLens {
     /// @param _user account for which calculation are done
     /// @param _asset token address for which calculation are done
     /// @return value of debt denominated in ETH with 18 decimal
-    function calculateBorrowValue(ISilo _silo, address _user, address _asset, uint256, uint256)
-        external
-        view
-        returns (uint256)
-    {
-        IPriceProvidersRepository priceProviderRepo = siloRepository.priceProvidersRepository();
+    function calculateBorrowValue(
+        ISilo _silo,
+        address _user,
+        address _asset,
+        uint256,
+        uint256
+    ) external view returns (uint256) {
+        IPriceProvidersRepository priceProviderRepo =
+            siloRepository.priceProvidersRepository();
         uint256 assetPrice = priceProviderRepo.getPrice(_asset);
         uint256 assetDecimals = ERC20(_asset).decimals();
 
         uint256 rcomp = Solvency.getRcomp(_silo, siloRepository, _asset, block.timestamp);
-        uint256 borrowAmount = Solvency.getUserBorrowAmount(_silo.assetStorage(_asset), _user, rcomp);
+        uint256 borrowAmount =
+            Solvency.getUserBorrowAmount(_silo.assetStorage(_asset), _user, rcomp);
 
         return borrowAmount.toValue(assetPrice, assetDecimals);
     }
@@ -217,16 +250,11 @@ contract SiloLens {
         view
         returns (uint256 liquidationThreshold)
     {
-        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) = _silo.getAssetsWithState();
+        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) =
+            _silo.getAssetsWithState();
 
         liquidationThreshold = Solvency.calculateLTVLimit(
-            Solvency.SolvencyParams(
-                siloRepository,
-                _silo,
-                assets,
-                assetsStates,
-                _user
-            ),
+            Solvency.SolvencyParams(siloRepository, _silo, assets, assetsStates, _user),
             Solvency.TypeofLTV.LiquidationThreshold
         );
     }
@@ -239,17 +267,16 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _user wallet address for which to read data
     /// @return maximumLTV Maximum Loan-To-Value of given user
-    function getUserMaximumLTV(ISilo _silo, address _user) external view returns (uint256 maximumLTV) {
-        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) = _silo.getAssetsWithState();
+    function getUserMaximumLTV(ISilo _silo, address _user)
+        external
+        view
+        returns (uint256 maximumLTV)
+    {
+        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) =
+            _silo.getAssetsWithState();
 
         maximumLTV = Solvency.calculateLTVLimit(
-            Solvency.SolvencyParams(
-                siloRepository,
-                _silo,
-                assets,
-                assetsStates,
-                _user
-            ),
+            Solvency.SolvencyParams(siloRepository, _silo, assets, assetsStates, _user),
             Solvency.TypeofLTV.MaximumLTV
         );
     }
@@ -262,7 +289,9 @@ contract SiloLens {
         address[] memory allAssets = _silo.getAssets();
 
         for (uint256 i; i < allAssets.length; i++) {
-            if (_silo.assetStorage(allAssets[i]).debtToken.balanceOf(_user) != 0) return true;
+            if (_silo.assetStorage(allAssets[i]).debtToken.balanceOf(_user) != 0) {
+                return true;
+            }
         }
 
         return false;
@@ -275,13 +304,15 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _asset asset address
     /// @return utilization value
-    function getUtilization(ISilo _silo, address _asset) external view returns (uint256) {
+    function getUtilization(ISilo _silo, address _asset)
+        external
+        view
+        returns (uint256)
+    {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData(_asset);
 
         return ModelStats.calculateUtilization(
-            getModel(_silo, _asset).DP(),
-            data.totalDeposits,
-            data.totalBorrowAmount
+            getModel(_silo, _asset).DP(), data.totalDeposits, data.totalBorrowAmount
         );
     }
 
@@ -290,16 +321,20 @@ contract SiloLens {
     /// @param _asset asset address
     /// @return APY with 18 decimals
     function depositAPY(ISilo _silo, address _asset) external view returns (uint256) {
-        IPriceProvidersRepository priceProviderRepo = siloRepository.priceProvidersRepository();
+        IPriceProvidersRepository priceProviderRepo =
+            siloRepository.priceProvidersRepository();
         uint256 assetPrice = priceProviderRepo.getPrice(_asset);
         uint256 assetDecimals = ERC20(_asset).decimals();
 
         // amount of debt generated per year in asset decimals
-        uint256 generatedDebtAmount = totalBorrowAmountWithInterest(_silo, _asset) * borrowAPY(_silo, _asset) / 1e18;
+        uint256 generatedDebtAmount =
+            totalBorrowAmountWithInterest(_silo, _asset) * borrowAPY(_silo, _asset) / 1e18;
         // generated debt value in ETH per year in 18 decimals
-        uint256 generatedDebtValue = generatedDebtAmount * assetPrice / 10 ** assetDecimals;
+        uint256 generatedDebtValue =
+            generatedDebtAmount * assetPrice / 10 ** assetDecimals;
         // value of deposits in ETH in 18 decimals
-        uint256 totalDepositsValue = totalDepositsWithInterest(_silo, _asset) * assetPrice / 10 ** assetDecimals;
+        uint256 totalDepositsValue =
+            totalDepositsWithInterest(_silo, _asset) * assetPrice / 10 ** assetDecimals;
 
         return generatedDebtValue * 1e18 / totalDepositsValue;
     }
@@ -325,18 +360,28 @@ contract SiloLens {
     /// @param _asset asset address
     /// @return APY with 18 decimals
     function borrowAPY(ISilo _silo, address _asset) public view returns (uint256) {
-        return getModel(_silo, _asset).getCurrentInterestRate(address(_silo), _asset, block.timestamp);
+        return getModel(_silo, _asset).getCurrentInterestRate(
+            address(_silo), _asset, block.timestamp
+        );
     }
 
     /// @notice returns total deposits with interest dynamically calculated at current block timestamp
     /// @param _asset asset address
     /// @return _totalDeposits total deposits amount with interest
-    function totalDepositsWithInterest(ISilo _silo, address _asset) public view returns (uint256 _totalDeposits) {
-        uint256 rcomp = getModel(_silo, _asset).getCompoundInterestRate(address(_silo), _asset, block.timestamp);
+    function totalDepositsWithInterest(ISilo _silo, address _asset)
+        public
+        view
+        returns (uint256 _totalDeposits)
+    {
+        uint256 rcomp = getModel(_silo, _asset).getCompoundInterestRate(
+            address(_silo), _asset, block.timestamp
+        );
         uint256 protocolShareFee = siloRepository.protocolShareFee();
         ISilo.UtilizationData memory data = _silo.utilizationData(_asset);
 
-        return Solvency.totalDepositsWithInterest(data.totalDeposits, protocolShareFee, rcomp);
+        return Solvency.totalDepositsWithInterest(
+            data.totalDeposits, protocolShareFee, rcomp
+        );
     }
 
     /// @notice returns total borrow amount with interest dynamically calculated at current block timestamp
@@ -347,7 +392,9 @@ contract SiloLens {
         view
         returns (uint256 _totalBorrowAmount)
     {
-        uint256 rcomp = getModel(_silo, _asset).getCompoundInterestRate(address(_silo), _asset, block.timestamp);
+        uint256 rcomp = getModel(_silo, _asset).getCompoundInterestRate(
+            address(_silo), _asset, block.timestamp
+        );
         ISilo.UtilizationData memory data = _silo.utilizationData(_asset);
 
         return Solvency.totalBorrowAmountWithInterest(data.totalBorrowAmount, rcomp);
@@ -365,11 +412,11 @@ contract SiloLens {
     /// - `ISilo.AssetStorage.debtToken`
     /// @param _user wallet address for which to read data
     /// @return balance of underlying token deposited or borrowed of given user
-    function balanceOfUnderlying(uint256 _assetTotalDeposits, IShareToken _shareToken, address _user)
-        public
-        view
-        returns (uint256)
-    {
+    function balanceOfUnderlying(
+        uint256 _assetTotalDeposits,
+        IShareToken _shareToken,
+        address _user
+    ) public view returns (uint256) {
         uint256 share = _shareToken.balanceOf(_user);
         return share.toAmount(_assetTotalDeposits, _shareToken.totalSupply());
     }
@@ -378,7 +425,13 @@ contract SiloLens {
     /// @param _silo Silo address from which to read data
     /// @param _asset asset for which to calculate interest rate
     /// @return IInterestRateModel interest rates model object
-    function getModel(ISilo _silo, address _asset) public view returns (IInterestRateModel) {
-        return IInterestRateModel(siloRepository.getInterestRateModel(address(_silo), _asset));
+    function getModel(ISilo _silo, address _asset)
+        public
+        view
+        returns (IInterestRateModel)
+    {
+        return IInterestRateModel(
+            siloRepository.getInterestRateModel(address(_silo), _asset)
+        );
     }
 }

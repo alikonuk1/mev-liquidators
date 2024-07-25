@@ -15,7 +15,12 @@ interface ISilo is IBaseSilo {
     /// @param _depositor The address of the recipient of collateral tokens
     /// @param _amount The amount of the token to deposit
     /// @param _collateralOnly True if depositing collateral only
-    function depositFor(address _asset, address _depositor, uint256 _amount, bool _collateralOnly) external;
+    function depositFor(
+        address _asset,
+        address _depositor,
+        uint256 _amount,
+        bool _collateralOnly
+    ) external;
 
     /// @notice Withdraw `_amount` of `_asset` tokens from the Silo to `msg.sender`
     /// @param _asset The address of the token to withdraw
@@ -47,7 +52,12 @@ interface ISilo is IBaseSilo {
     /// @param _borrower The address of the debt tokens receiver
     /// @param _receiver The address of the asset receiver
     /// @param _amount The amount of the token to borrow
-    function borrowFor(address _asset, address _borrower, address _receiver, uint256 _amount) external;
+    function borrowFor(
+        address _asset,
+        address _borrower,
+        address _receiver,
+        uint256 _amount
+    ) external;
 
     /// @notice Repay `_amount` of `_asset` tokens from `msg.sender` to the Silo
     /// @param _asset The address of the token to repay

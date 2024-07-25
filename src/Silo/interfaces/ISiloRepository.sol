@@ -22,7 +22,6 @@ interface ISiloRepository {
     struct SiloVersion {
         /// @dev Default version of Silo. If set to 0, it means it is not set. By default it is set to 1
         uint128 byDefault;
-
         /// @dev Latest added version of Silo. If set to 0, it means it is not set. By default it is set to 1
         uint128 latest;
     }
@@ -35,14 +34,12 @@ interface ISiloRepository {
         ///      value uses 18 decimals eg. 100% == 1e18
         ///      max valid value is 1e18 so it needs storage of 60 bits
         uint64 maxLoanToValue;
-
         /// @dev Liquidation Threshold represents the threshold at which a borrow position will be considered
         ///      undercollateralized and subject to liquidation for each collateral. For example,
         ///      if a collateral has a liquidation threshold of 80%, it means that the loan will be
         ///      liquidated when the borrowAmount value is worth 80% of the collateral value.
         ///      value uses 18 decimals eg. 100% == 1e18
         uint64 liquidationThreshold;
-
         /// @dev interest rate model address
         IInterestRateModel interestRateModel;
     }
@@ -76,9 +73,7 @@ interface ISiloRepository {
 
     /// @notice Emitted on price provider repository address update
     /// @param newProvider address of new oracle repository
-    event PriceProvidersRepositoryUpdate(
-        IPriceProvidersRepository indexed newProvider
-    );
+    event PriceProvidersRepositoryUpdate(IPriceProvidersRepository indexed newProvider);
 
     /// @notice Emitted on token factory address update
     /// @param newTokensFactory address of new token factory
@@ -96,7 +91,9 @@ interface ISiloRepository {
     /// @param factory factory address that deploys registered Silo version
     /// @param siloLatestVersion Silo version of registered Silo
     /// @param siloDefaultVersion current default Silo version
-    event RegisterSiloVersion(address indexed factory, uint128 siloLatestVersion, uint128 siloDefaultVersion);
+    event RegisterSiloVersion(
+        address indexed factory, uint128 siloLatestVersion, uint128 siloDefaultVersion
+    );
 
     /// @notice Emitted when Silo version is unregistered
     /// @param factory factory address that deploys unregistered Silo version
@@ -112,16 +109,16 @@ interface ISiloRepository {
     /// @param newProtocolShareFee new protocol share fee
     /// @param newProtocolLiquidationFee new protocol liquidation fee
     event FeeUpdate(
-        uint64 newEntryFee,
-        uint64 newProtocolShareFee,
-        uint64 newProtocolLiquidationFee
+        uint64 newEntryFee, uint64 newProtocolShareFee, uint64 newProtocolLiquidationFee
     );
 
     /// @notice Emitted when asset config is updated for a silo
     /// @param silo silo for which asset config is being set
     /// @param asset asset for which asset config is being set
     /// @param assetConfig new asset config
-    event AssetConfigUpdate(address indexed silo, address indexed asset, AssetConfig assetConfig);
+    event AssetConfigUpdate(
+        address indexed silo, address indexed asset, AssetConfig assetConfig
+    );
 
     /// @notice Emitted when silo (silo factory) version is set for asset
     /// @param asset asset for which asset config is being set
@@ -142,7 +139,9 @@ interface ISiloRepository {
     /// @param _siloAsset silo asset
     /// @param _siloData (optional) data that may be needed during silo creation
     /// @return createdSilo address of created silo
-    function newSilo(address _siloAsset, bytes memory _siloData) external returns (address createdSilo);
+    function newSilo(address _siloAsset, bytes memory _siloData)
+        external
+        returns (address createdSilo);
 
     /// @notice use this method to deploy new version of Silo for an asset that already has Silo deployed.
     /// Only owner (DAO) can replace.
@@ -152,11 +151,9 @@ interface ISiloRepository {
     /// for 99% of cases.
     /// @param _siloData (optional) data that may be needed during silo creation
     /// @return createdSilo address of created silo
-    function replaceSilo(
-        address _siloAsset,
-        uint128 _siloVersion,
-        bytes memory _siloData
-    ) external returns (address createdSilo);
+    function replaceSilo(address _siloAsset, uint128 _siloVersion, bytes memory _siloData)
+        external
+        returns (address createdSilo);
 
     /// @notice Set factory contract for debt and collateral tokens for each Silo asset
     /// @dev Callable only by owner
@@ -192,7 +189,8 @@ interface ISiloRepository {
     /// @notice Set default interest rate model
     /// @dev Callable only by owner
     /// @param _defaultInterestRateModel default interest rate model
-    function setDefaultInterestRateModel(IInterestRateModel _defaultInterestRateModel) external;
+    function setDefaultInterestRateModel(IInterestRateModel _defaultInterestRateModel)
+        external;
 
     /// @notice Set default maximum LTV
     /// @dev Callable only by owner
@@ -203,12 +201,14 @@ interface ISiloRepository {
     /// @dev Callable only by owner
     /// @param _defaultLiquidationThreshold default liquidation threshold in precision points
     /// (Solvency._PRECISION_DECIMALS)
-    function setDefaultLiquidationThreshold(uint64 _defaultLiquidationThreshold) external;
+    function setDefaultLiquidationThreshold(uint64 _defaultLiquidationThreshold)
+        external;
 
     /// @notice Set price provider repository
     /// @dev Callable only by owner
     /// @param _repository price provider repository address
-    function setPriceProvidersRepository(IPriceProvidersRepository _repository) external;
+    function setPriceProvidersRepository(IPriceProvidersRepository _repository)
+        external;
 
     /// @notice Set router contract
     /// @dev Callable only by owner
@@ -219,7 +219,10 @@ interface ISiloRepository {
     /// @dev Callable only by owner
     /// @param _silo silo address for which to set `_notificationReceiver`
     /// @param _notificationReceiver NotificationReceiver address
-    function setNotificationReceiver(address _silo, INotificationReceiver _notificationReceiver) external;
+    function setNotificationReceiver(
+        address _silo,
+        INotificationReceiver _notificationReceiver
+    ) external;
 
     /// @notice Adds new bridge asset
     /// @dev New bridge asset must be unique. Duplicates in bridge assets are not allowed. It's possible to add
@@ -290,27 +293,39 @@ interface ISiloRepository {
     /// @param _silo address of Silo
     /// @param _asset address of an asset
     /// @return maximum LTV in precision points (Solvency._PRECISION_DECIMALS)
-    function getMaximumLTV(address _silo, address _asset) external view returns (uint256);
+    function getMaximumLTV(address _silo, address _asset)
+        external
+        view
+        returns (uint256);
 
     /// @notice Get Interest Rate Model address for asset in given Silo
     /// @dev If dedicated config is not set, method returns default config
     /// @param _silo address of Silo
     /// @param _asset address of an asset
     /// @return address of interest rate model
-    function getInterestRateModel(address _silo, address _asset) external view returns (IInterestRateModel);
+    function getInterestRateModel(address _silo, address _asset)
+        external
+        view
+        returns (IInterestRateModel);
 
     /// @notice Get liquidation threshold for asset in given Silo
     /// @dev If dedicated config is not set, method returns default config
     /// @param _silo address of Silo
     /// @param _asset address of an asset
     /// @return liquidation threshold in precision points (Solvency._PRECISION_DECIMALS)
-    function getLiquidationThreshold(address _silo, address _asset) external view returns (uint256);
+    function getLiquidationThreshold(address _silo, address _asset)
+        external
+        view
+        returns (uint256);
 
     /// @notice Get incentive contract address. Incentive contracts are responsible for distributing rewards
     /// to debt and/or collateral token holders of given Silo
     /// @param _silo address of Silo
     /// @return incentive contract address
-    function getNotificationReceiver(address _silo) external view returns (INotificationReceiver);
+    function getNotificationReceiver(address _silo)
+        external
+        view
+        returns (INotificationReceiver);
 
     /// @notice Get owner role address of Repository
     /// @return owner role address
@@ -318,7 +333,10 @@ interface ISiloRepository {
 
     /// @notice get PriceProvidersRepository contract that manages price providers implementations
     /// @return IPriceProvidersRepository address
-    function priceProvidersRepository() external view returns (IPriceProvidersRepository);
+    function priceProvidersRepository()
+        external
+        view
+        returns (IPriceProvidersRepository);
 
     /// @dev Get protocol fee for opening a borrow position
     /// @return fee in precision points (Solvency._PRECISION_DECIMALS == 100%)

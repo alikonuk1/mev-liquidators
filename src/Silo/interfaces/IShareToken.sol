@@ -10,8 +10,7 @@ interface IShareToken is IERC20Metadata {
     /// @param notificationReceiver receiver address
     /// @param success false if TX reverted on `notificationReceiver` side, otherwise true
     event NotificationSent(
-        INotificationReceiver indexed notificationReceiver,
-        bool success
+        INotificationReceiver indexed notificationReceiver, bool success
     );
 
     /// @notice Mint method for Silo to create debt position

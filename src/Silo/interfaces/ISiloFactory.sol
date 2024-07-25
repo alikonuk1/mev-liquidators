@@ -17,7 +17,9 @@ interface ISiloFactory {
     /// @param _version version of silo implementation
     /// @param _data (optional) data that may be needed during silo creation
     /// @return silo deployed Silo address
-    function createSilo(address _siloAsset, uint128 _version, bytes memory _data) external returns (address silo);
+    function createSilo(address _siloAsset, uint128 _version, bytes memory _data)
+        external
+        returns (address silo);
 
     /// @dev just a helper method to see if address is a factory
     function siloFactoryPing() external pure returns (bytes4);

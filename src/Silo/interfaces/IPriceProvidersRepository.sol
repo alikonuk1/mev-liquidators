@@ -15,7 +15,9 @@ interface IPriceProvidersRepository {
     /// @notice Emitted when asset is assigned to price provider
     /// @param asset assigned asset   address
     /// @param priceProvider price provider address
-    event PriceProviderForAsset(address indexed asset, IPriceProvider indexed priceProvider);
+    event PriceProviderForAsset(
+        address indexed asset, IPriceProvider indexed priceProvider
+    );
 
     /// @notice Register new price provider
     /// @param _priceProvider address of price provider
@@ -29,7 +31,8 @@ interface IPriceProvidersRepository {
     /// @dev Request for asset price is forwarded to the price provider assigned to that asset
     /// @param _asset address of an asset for which price provider will be used
     /// @param _priceProvider address of price provider
-    function setPriceProviderForAsset(address _asset, IPriceProvider _priceProvider) external;
+    function setPriceProviderForAsset(address _asset, IPriceProvider _priceProvider)
+        external;
 
     /// @notice Returns "Time-Weighted Average Price" for an asset
     /// @param _asset address of an asset for which to read price
@@ -39,7 +42,10 @@ interface IPriceProvidersRepository {
     /// @notice Gets price provider assigned to an asset
     /// @param _asset address of an asset for which to get price provider
     /// @return priceProvider address of price provider
-    function priceProviders(address _asset) external view returns (IPriceProvider priceProvider);
+    function priceProviders(address _asset)
+        external
+        view
+        returns (IPriceProvider priceProvider);
 
     /// @notice Gets token address in which prices are quoted
     /// @return quoteToken address

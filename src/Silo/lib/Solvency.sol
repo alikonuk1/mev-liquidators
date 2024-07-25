@@ -19,7 +19,10 @@ library Solvency {
     /// positions in a Silo
     /// LiquidationThreshold - Liquidation Threshold represents the threshold at which all user's borrow positions
     /// in a Silo will be considered under collateralized and subject to liquidation
-    enum TypeofLTV { MaximumLTV, LiquidationThreshold }
+    enum TypeofLTV {
+        MaximumLTV,
+        LiquidationThreshold
+    }
 
     struct SolvencyParams {
         /// @param siloRepository SiloRepository address
@@ -55,12 +58,11 @@ library Solvency {
         // this return avoids eg. additional checks on withdraw, when user did not borrow any asset
         if (EasyMath.sum(totalBorrowAmounts) == 0) return (0, 0);
 
-        IPriceProvidersRepository priceProvidersRepository = _params.siloRepository.priceProvidersRepository();
+        IPriceProvidersRepository priceProvidersRepository =
+            _params.siloRepository.priceProvidersRepository();
 
         uint256[] memory borrowValues = convertAmountsToValues(
-            priceProvidersRepository,
-            _params.assets,
-            totalBorrowAmounts
+            priceProvidersRepository, _params.assets, totalBorrowAmounts
         );
 
         // value of user's total debt
@@ -68,7 +70,8 @@ library Solvency {
 
         if (borrowTotalValue == 0) return (0, 0);
 
-        uint256[] memory collateralValues = getUserCollateralValues(priceProvidersRepository, _params);
+        uint256[] memory collateralValues =
+            getUserCollateralValues(priceProvidersRepository, _params);
 
         // value of user's collateral
         uint256 collateralTotalValue = EasyMath.sum(collateralValues);
@@ -101,9 +104,11 @@ library Solvency {
         view
         returns (uint256 limit)
     {
-        IPriceProvidersRepository priceProvidersRepository = _params.siloRepository.priceProvidersRepository();
+        IPriceProvidersRepository priceProvidersRepository =
+            _params.siloRepository.priceProvidersRepository();
 
-        uint256[] memory collateralValues = getUserCollateralValues(priceProvidersRepository, _params);
+        uint256[] memory collateralValues =
+            getUserCollateralValues(priceProvidersRepository, _params);
 
         // value of user's collateral
         uint256 collateralTotalValue = EasyMath.sum(collateralValues);
@@ -126,13 +131,14 @@ library Solvency {
     /// @param _priceProvidersRepository address of IPriceProvidersRepository where prices are read
     /// @param _params `Solvency.SolvencyParams` struct with needed params for calculation
     /// @return collateralValues worth of each collateral deposit of a user as an array
-    function getUserCollateralValues(IPriceProvidersRepository _priceProvidersRepository, SolvencyParams memory _params)
-        internal
-        view
-        returns(uint256[] memory collateralValues)
-    {
+    function getUserCollateralValues(
+        IPriceProvidersRepository _priceProvidersRepository,
+        SolvencyParams memory _params
+    ) internal view returns (uint256[] memory collateralValues) {
         uint256[] memory collateralAmounts = getCollateralAmounts(_params);
-        collateralValues = convertAmountsToValues(_priceProvidersRepository, _params.assets, collateralAmounts);
+        collateralValues = convertAmountsToValues(
+            _priceProvidersRepository, _params.assets, collateralAmounts
+        );
     }
 
     /// @notice Convert assets amounts to values in ETH (amount * price)
@@ -168,17 +174,25 @@ library Solvency {
         view
         returns (uint256[] memory collateralAmounts)
     {
-        if (_params.assetStates.length != _params.assetStates.length) revert IncorrectDataLength();
+        if (_params.assetStates.length != _params.assetStates.length) {
+            revert IncorrectDataLength();
+        }
 
         collateralAmounts = new uint256[](_params.assets.length);
 
         for (uint256 i = 0; i < _params.assets.length; i++) {
-            uint256 userCollateralTokenBalance = _params.assetStates[i].collateralToken.balanceOf(_params.user);
-            uint256 userCollateralOnlyTokenBalance = _params.assetStates[i].collateralOnlyToken.balanceOf(_params.user);
+            uint256 userCollateralTokenBalance =
+                _params.assetStates[i].collateralToken.balanceOf(_params.user);
+            uint256 userCollateralOnlyTokenBalance =
+                _params.assetStates[i].collateralOnlyToken.balanceOf(_params.user);
 
-            if (userCollateralTokenBalance + userCollateralOnlyTokenBalance == 0) continue;
+            if (userCollateralTokenBalance + userCollateralOnlyTokenBalance == 0) {
+                continue;
+            }
 
-            uint256 rcomp = getRcomp(_params.silo, _params.siloRepository, _params.assets[i], block.timestamp);
+            uint256 rcomp = getRcomp(
+                _params.silo, _params.siloRepository, _params.assets[i], block.timestamp
+            );
 
             collateralAmounts[i] = getUserCollateralAmount(
                 _params.assetStates[i],
@@ -199,13 +213,18 @@ library Solvency {
         view
         returns (uint256[] memory totalBorrowAmounts)
     {
-        if (_params.assets.length != _params.assetStates.length) revert IncorrectDataLength();
+        if (_params.assets.length != _params.assetStates.length) {
+            revert IncorrectDataLength();
+        }
 
         totalBorrowAmounts = new uint256[](_params.assets.length);
 
         for (uint256 i = 0; i < _params.assets.length; i++) {
-            uint256 rcomp = getRcomp(_params.silo, _params.siloRepository, _params.assets[i], block.timestamp);
-            totalBorrowAmounts[i] = getUserBorrowAmount(_params.assetStates[i], _params.user, rcomp);
+            uint256 rcomp = getRcomp(
+                _params.silo, _params.siloRepository, _params.assets[i], block.timestamp
+            );
+            totalBorrowAmounts[i] =
+                getUserBorrowAmount(_params.assetStates[i], _params.user, rcomp);
         }
     }
 
@@ -223,10 +242,14 @@ library Solvency {
         uint256 _rcomp,
         ISiloRepository _siloRepository
     ) internal view returns (uint256) {
-        uint256 assetAmount = _userCollateralTokenBalance == 0 ? 0 : _userCollateralTokenBalance.toAmount(
-            totalDepositsWithInterest(_assetStates.totalDeposits, _siloRepository.protocolShareFee(), _rcomp),
-            _assetStates.collateralToken.totalSupply()
-        );
+        uint256 assetAmount = _userCollateralTokenBalance == 0
+            ? 0
+            : _userCollateralTokenBalance.toAmount(
+                totalDepositsWithInterest(
+                    _assetStates.totalDeposits, _siloRepository.protocolShareFee(), _rcomp
+                ),
+                _assetStates.collateralToken.totalSupply()
+            );
 
         uint256 assetCollateralOnlyAmount = _userCollateralOnlyTokenBalance == 0
             ? 0
@@ -243,16 +266,19 @@ library Solvency {
     /// @param _user user wallet address for which to read debt
     /// @param _rcomp compounded interest rate to account for during calculations, could be 0
     /// @return amount of borrowed token
-    function getUserBorrowAmount(ISilo.AssetStorage memory _assetStates, address _user, uint256 _rcomp)
-        internal
-        view
-        returns (uint256)
-    {
+    function getUserBorrowAmount(
+        ISilo.AssetStorage memory _assetStates,
+        address _user,
+        uint256 _rcomp
+    ) internal view returns (uint256) {
         uint256 balance = _assetStates.debtToken.balanceOf(_user);
         if (balance == 0) return 0;
 
-        uint256 totalBorrowAmountCached = totalBorrowAmountWithInterest(_assetStates.totalBorrowAmount, _rcomp);
-        return balance.toAmount(totalBorrowAmountCached, _assetStates.debtToken.totalSupply());
+        uint256 totalBorrowAmountCached =
+            totalBorrowAmountWithInterest(_assetStates.totalBorrowAmount, _rcomp);
+        return balance.toAmount(
+            totalBorrowAmountCached, _assetStates.debtToken.totalSupply()
+        );
     }
 
     /// @notice Get compounded interest rate from the model
@@ -261,12 +287,14 @@ library Solvency {
     /// @param _asset address of asset for which to read interest rate
     /// @param _timestamp latest timestamp used to determine amount of time from last rate update
     /// @return rcomp compounded interest rate for an asset
-    function getRcomp(ISilo _silo, ISiloRepository _siloRepository, address _asset, uint256 _timestamp)
-        internal
-        view
-        returns (uint256 rcomp)
-    {
-        IInterestRateModel model = _siloRepository.getInterestRateModel(address(_silo), _asset);
+    function getRcomp(
+        ISilo _silo,
+        ISiloRepository _siloRepository,
+        address _asset,
+        uint256 _timestamp
+    ) internal view returns (uint256 rcomp) {
+        IInterestRateModel model =
+            _siloRepository.getInterestRateModel(address(_silo), _asset);
         rcomp = model.getCompoundInterestRate(address(_silo), _asset, _timestamp);
     }
 
@@ -275,15 +303,16 @@ library Solvency {
     /// @param _protocolShareFee `siloRepository.protocolShareFee()`
     /// @param _rcomp compounded interest rate from last update until now
     /// @return _totalDepositsWithInterests total deposits amount with interest
-    function totalDepositsWithInterest(uint256 _assetTotalDeposits, uint256 _protocolShareFee, uint256 _rcomp)
-        internal
-        pure
-        returns (uint256 _totalDepositsWithInterests)
-    {
+    function totalDepositsWithInterest(
+        uint256 _assetTotalDeposits,
+        uint256 _protocolShareFee,
+        uint256 _rcomp
+    ) internal pure returns (uint256 _totalDepositsWithInterests) {
         uint256 depositorsShare = _PRECISION_DECIMALS - _protocolShareFee;
 
-        return _assetTotalDeposits + _assetTotalDeposits * _rcomp * depositorsShare /
-            _PRECISION_DECIMALS / _PRECISION_DECIMALS;
+        return _assetTotalDeposits
+            + _assetTotalDeposits * _rcomp * depositorsShare / _PRECISION_DECIMALS
+                / _PRECISION_DECIMALS;
     }
 
     /// @notice Returns total borrow amount with interest dynamically calculated at current block timestamp
@@ -295,7 +324,8 @@ library Solvency {
         pure
         returns (uint256 totalBorrowAmountWithInterests)
     {
-        totalBorrowAmountWithInterests = _totalBorrowAmount + _totalBorrowAmount * _rcomp / _PRECISION_DECIMALS;
+        totalBorrowAmountWithInterests =
+            _totalBorrowAmount + _totalBorrowAmount * _rcomp / _PRECISION_DECIMALS;
     }
 
     /// @notice Calculates protocol liquidation fee and new protocol total fees collected
@@ -304,14 +334,19 @@ library Solvency {
     /// @param _liquidationFee liquidation fee in Solvency._PRECISION_DECIMALS
     /// @return liquidationFeeAmount calculated interest
     /// @return newProtocolEarnedFees `_currentInterest` + calculated fees
-    function calculateLiquidationFee(uint256 _protocolEarnedFees, uint256 _amount, uint256 _liquidationFee)
+    function calculateLiquidationFee(
+        uint256 _protocolEarnedFees,
+        uint256 _amount,
+        uint256 _liquidationFee
+    )
         internal
         pure
         returns (uint256 liquidationFeeAmount, uint256 newProtocolEarnedFees)
     {
         unchecked {
             // if we overflow on multiplication it should not revert tx, we will get lower fees
-            liquidationFeeAmount = _amount * _liquidationFee / Solvency._PRECISION_DECIMALS;
+            liquidationFeeAmount =
+                _amount * _liquidationFee / Solvency._PRECISION_DECIMALS;
 
             if (_protocolEarnedFees > type(uint256).max - liquidationFeeAmount) {
                 newProtocolEarnedFees = type(uint256).max;
@@ -369,11 +404,7 @@ library Solvency {
 
         for (uint256 i = 0; i < _assets.length; i++) {
             totalAvailableToBorrowValue += _getAvailableToBorrowValue(
-                _siloRepository,
-                _silo,
-                _assets[i],
-                _ltvType,
-                _collateralValues[i]
+                _siloRepository, _silo, _assets[i], _ltvType, _collateralValues[i]
             );
         }
     }

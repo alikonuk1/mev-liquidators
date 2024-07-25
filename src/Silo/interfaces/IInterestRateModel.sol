@@ -37,16 +37,18 @@ interface IInterestRateModel {
     /// @param _asset address of an asset in Silo for which interest rate should be calculated
     /// @param _blockTimestamp current block timestamp
     /// @return rcomp compounded interest rate from last update until now
-    function getCompoundInterestRateAndUpdate(
-        address _asset,
-        uint256 _blockTimestamp
-    ) external returns (uint256 rcomp);
+    function getCompoundInterestRateAndUpdate(address _asset, uint256 _blockTimestamp)
+        external
+        returns (uint256 rcomp);
 
     /// @dev Get config for giver asset in a Silo. If dedicated config is not set, default one will be returned.
     /// @param _silo Silo address for which config should be set
     /// @param _asset asset address for which config should be set
     /// @return Config sturct for asset in Silo
-    function getConfig(address _silo, address _asset) external view returns (Config memory);
+    function getConfig(address _silo, address _asset)
+        external
+        view
+        returns (Config memory);
 
     /// @dev get compound interest rate
     /// @param _silo address of Silo
@@ -96,11 +98,7 @@ interface IInterestRateModel {
         int256 _u,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) external pure returns (
-        uint256 rcomp,
-        int256 ri,
-        int256 Tcrit // solhint-disable-line var-name-mixedcase
-    );
+    ) external pure returns (uint256 rcomp, int256 ri, int256 Tcrit); // solhint-disable-line var-name-mixedcase
 
     /// @dev returns decimal points used by model
     function DP() external pure returns (int256); // solhint-disable-line func-name-mixedcase

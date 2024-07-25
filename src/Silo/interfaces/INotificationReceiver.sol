@@ -8,7 +8,8 @@ interface INotificationReceiver {
     /// @param _from sender
     /// @param _to receiver
     /// @param _amount amount that was transferred
-    function onAfterTransfer(address _token, address _from, address _to, uint256 _amount) external;
+    function onAfterTransfer(address _token, address _from, address _to, uint256 _amount)
+        external;
 
     /// @dev Sanity check function
     /// @return always true

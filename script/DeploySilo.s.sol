@@ -30,7 +30,7 @@ contract DeployScript is Script {
         swappers[0] = uniswapV3Swap;
 
         siloLiquidator =
-            new SiloLiquidator(SILO_REPOSITORY, SILO_LENS, priceProviders, swappers);
+            new SiloLiquidator(SILO_REPOSITORY, priceProviders, swappers);
         vm.stopBroadcast();
     }
 }
