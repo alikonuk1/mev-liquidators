@@ -43,6 +43,7 @@ contract testTest is Test, DeployScript {
         deal(carol, 999 ether);
 
         deal(rETH, alice, 100 ether);
+        deal(RDNT, alice, 100 ether);
 
         DeployScript.run();
     }
@@ -109,6 +110,69 @@ contract testTest is Test, DeployScript {
         assertEq(isSolventAL, true);
     }
 
+    function test_simulateLiquidateRDNT() public {
+        address quoteToken = priceProviderRepository.quoteToken();
+
+        // Alice deposits
+        vm.startPrank(alice);
+        ISilo silo = ISilo(siloRepository.getSilo(RDNT));
+        IERC20(RDNT).approve(address(silo), 1 ether);
+        silo.deposit(RDNT, 1 ether, false);
+        vm.stopPrank();
+
+        // Alice borrows
+        vm.startPrank(alice);
+        silo.borrow(USDCe, 10000); // Borrow 0.01 USDCe
+        vm.stopPrank();
+
+        // Check if Alice is solvent before price drop
+        bool isSolventB = silo.isSolvent(alice);
+        console2.log("Is Solvent Before =", isSolventB);
+        assertEq(isSolventB, true);
+
+        // Get collateral price before price drop
+        uint256 priceB = priceProviderRepository.getPrice(RDNT);
+        console2.log("Collateral Price Before =", priceB);
+
+        // Simulate price drop on collateral
+        vm.mockCall(
+            PRICE_PROVIDERS_REPOSITORY,
+            abi.encodeWithSelector(priceProviderRepository.getPrice.selector, RDNT),
+            abi.encode(538733308090)
+        );
+
+        // Get collateral price after price drop
+        uint256 priceA = priceProviderRepository.getPrice(RDNT);
+        console2.log("Collateral Price After =", priceA);
+        assertEq(priceA, 538733308090);
+
+        // Check if Alice is solvent after price drop
+        bool isSolventA = silo.isSolvent(alice);
+        console2.log("Is Solvent After =", isSolventA);
+        assertEq(isSolventA, false);
+
+        // Check liquidator balance before liquidation
+        uint256 balanceB = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Balance Before Liquidation =", balanceB);
+
+        // Liquidate
+        vm.startPrank(deployer);
+        address[] memory users = new address[](1);
+        users[0] = alice;
+        siloLiquidator.executeLiquidation(users, silo);
+        vm.stopPrank();
+
+        // Check liquidator balance after liquidation
+        uint256 balanceA = IERC20(quoteToken).balanceOf(address(siloLiquidator));
+        console2.log("Balance After Liquidation =", balanceA);
+
+        // Check if Alice is solvent after liquidation
+        bool isSolventAL = silo.isSolvent(alice);
+        console2.log("Is Solvent After Liquidation =", isSolventAL);
+        assertEq(isSolventAL, true);
+    }
+
+    // WITHDRAW EARNINGS
     function test_withdrawEarnings() public {
         address quoteToken = priceProviderRepository.quoteToken();
 
@@ -195,6 +259,9 @@ contract testTest is Test, DeployScript {
         silo.deposit(rETH, 1 ether, false);
         vm.stopPrank();
 
+        uint256 thresholdBB = siloLiquidator.getUserLiquidationThreshold(address(silo), alice);
+        console2.log("Liquidation Threshold Before Borrow =", thresholdBB);
+
         // Alice borrows
         vm.startPrank(alice);
         silo.borrow(USDCe, 100000000); // Borrow 100 USDCe
@@ -208,6 +275,9 @@ contract testTest is Test, DeployScript {
         // Get collateral price before price drop
         uint256 priceB = priceProviderRepository.getPrice(rETH);
         console2.log("Collateral Price Before =", priceB);
+
+        uint256 thresholdB = siloLiquidator.getUserLiquidationThreshold(address(silo), alice);
+        console2.log("Liquidation Threshold Before Price Drop =", thresholdB);
 
         // Simulate price drop on collateral
         vm.mockCall(
@@ -236,6 +306,9 @@ contract testTest is Test, DeployScript {
         users[0] = alice;
         siloLiquidator.executeLiquidation(users, silo);
         vm.stopPrank();
+
+        uint256 thresholdAL = siloLiquidator.getUserLiquidationThreshold(address(silo), alice);
+        console2.log("Liquidation Threshold After Liq =", thresholdAL);
 
         // Check liquidator balance after liquidation
         uint256 balanceA = IERC20(quoteToken).balanceOf(address(siloLiquidator));

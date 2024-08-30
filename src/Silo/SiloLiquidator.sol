@@ -12,6 +12,7 @@ import "./interfaces/ISiloRepository.sol";
 import "./interfaces/IPriceProvidersRepository.sol";
 
 import "./lib/Ping.sol";
+import "./lib/Solvency.sol";
 
 interface IWrappedNativeToken is IERC20 {
     function deposit() external payable;
@@ -167,6 +168,20 @@ contract SiloLiquidator is IFlashLiquidationReceiver, Ownable {
         }
 
         return hasDebt;
+    }
+
+    function getUserLiquidationThreshold(address _silo, address _user)
+        external
+        view
+        returns (uint256 liquidationThreshold)
+    {
+        (address[] memory assets, ISilo.AssetStorage[] memory assetsStates) =
+            ISilo(_silo).getAssetsWithState();
+
+        liquidationThreshold = Solvency.calculateLTVLimit(
+            Solvency.SolvencyParams(siloRepository, ISilo(_silo), assets, assetsStates, _user),
+            Solvency.TypeofLTV.LiquidationThreshold
+        );
     }
 
     function findPriceProvider(address _asset) public view returns (IPriceProvider) {

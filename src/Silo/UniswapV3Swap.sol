@@ -49,10 +49,15 @@ contract UniswapV3Swap is ISwapper {
     {
         address poolAddress;
 
-        if (_asset == 0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8){
-            poolAddress = 0xAac7DE2b91293BA1791503d9127d2bDf2159db65;
+        // RDNT
+        if (_asset == 0x3082CC23568eA640225c2467653dB90e9250AaA0){
+            poolAddress = 0x446BF9748B4eA044dd759d9B9311C70491dF8F29;
+        // USDCe
         } else if (_asset == 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8){
             poolAddress = 0xC31E54c7a869B9FcBEcc14363CF510d1c41fa443;
+        // rETH
+        } else if (_asset == 0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8){
+            poolAddress = 0xAac7DE2b91293BA1791503d9127d2bDf2159db65;
         }
 
         IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);

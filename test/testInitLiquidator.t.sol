@@ -34,7 +34,7 @@ contract testTest is Test, DeployScript {
 
     function setUp() public {
         mantleFork = vm.createSelectFork(vm.rpcUrl("mantle"));
-        //vm.rollFork(64_046_026);
+        vm.rollFork(64_046_026);
 
         alice = makeAddr("Alice");
         bob = makeAddr("Bob");
