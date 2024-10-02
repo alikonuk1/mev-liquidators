@@ -19,7 +19,6 @@ MEV (Maximal Extractable Value) Liquidators is a collection of smart contracts a
 ## Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation.html)
-- RPC URL for Arbitrum and Mantle networks
 
 ## Setup
 
