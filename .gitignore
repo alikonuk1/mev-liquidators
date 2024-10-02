@@ -15,3 +15,5 @@ docs/
 
 # IDE files
 .vscode/
+
+.DS_Store
