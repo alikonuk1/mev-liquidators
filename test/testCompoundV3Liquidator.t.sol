@@ -9,7 +9,7 @@ import {ISiloRepository} from "src/Silo/interfaces/ISiloRepository.sol";
 import {IPriceProvidersRepository} from
     "src/Silo/interfaces/IPriceProvidersRepository.sol";
 
-contract testSiloLiquidator is Test, DeployScript {
+contract testCompoundV3Liquidator is Test, DeployScript {
     address public PRICE_PROVIDERS_REPOSITORY = 0x5bf4E67127263D951FC515E23B323d0e3b4485fd;
 
     address public WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;

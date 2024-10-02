@@ -9,7 +9,7 @@ import {ILendingPool} from "src/Init/interfaces/ILendingPool.sol";
 import {IPosManager} from "src/Init/interfaces/IPosManager.sol";
 import {IInitOracle} from "src/Init/interfaces/IInitOracle.sol";
 
-contract testTest is Test, DeployScript {
+contract testInitLiquidator is Test, DeployScript {
     address public INIT_CORE = 0x972BcB0284cca0152527c4f70f8F689852bCAFc5;
     address public POS_MANAGER = 0x0e7401707CD08c03CDb53DAEF3295DDFb68BBa92;
     address public INIT_ORACLE = 0x4E195A32b2f6eBa9c4565bA49bef34F23c2C0350;
